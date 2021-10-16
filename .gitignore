@@ -128,7 +128,13 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# PyCharm/Clion/...
+.idea/
+
 # PyTorch
 data/
 *.pth
 *.onnx
+output/
+*.part
+*.mp4
