@@ -241,7 +241,8 @@ def custom_config(arg: Namespace) -> Namespace:
     arg.data_path = "/media/hangwu/TOSHIBA_EXT/Dataset/COCO"
     arg.dataset = "coco_kp"
     arg.model = "keypointrcnn_resnet50_fpn"
-    arg.epoch = 46
+    arg.output_dir = "output"
+    arg.epoch = 1  # for DurchLaufen
     arg.lr_steps = [36, 43]
     arg.aspect_ratio_group_factor = 3
     arg.lr = 0.002
