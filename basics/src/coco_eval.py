@@ -5,9 +5,10 @@ from contextlib import redirect_stdout
 import numpy as np
 import pycocotools.mask as mask_util
 import torch
-import utils
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
+
+import utils
 
 
 class CocoEvaluator:
@@ -36,6 +37,9 @@ class CocoEvaluator:
 
             coco_eval.cocoDt = coco_dt
             coco_eval.params.imgIds = list(img_ids)
+            # TODO important! keypoint num matters! Need to change!
+            coco_eval.params.kpt_oks_sigmas = np.array(
+                [.26, .25, .25, .35, .35, .79, .79, .72, .72, .62, .62, 1.07, 1.07, .87, .87, .89, .89]) / 10.0
             img_ids, eval_imgs = evaluate(coco_eval)
 
             self.eval_imgs[iou_type].append(eval_imgs)
