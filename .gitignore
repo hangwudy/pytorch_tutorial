@@ -138,3 +138,6 @@ data/
 output/
 *.part
 *.mp4
+
+# TensorBoard
+events*

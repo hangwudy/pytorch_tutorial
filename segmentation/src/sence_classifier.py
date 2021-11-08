@@ -1,11 +1,12 @@
 # Scene classification & segmentation
 
-from collections import OrderedDict
-from typing import Dict, Optional, List
+from collections import OrderedDict, namedtuple
+from typing import Dict, Optional, List, Any
 
 import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
+from torch.utils.tensorboard import SummaryWriter
 from torchvision.models import resnet
 from torchvision.models._utils import IntermediateLayerGetter
 
@@ -128,6 +129,35 @@ class SceneParserHead(nn.Module):
         return x
 
 
+class ModelWrapper(torch.nn.Module):
+    """
+    Wrapper class for model with dict/list rvalues.
+    https://discuss.pytorch.org/t/a-tensorboard-problem-about-use-add-graph-method-for-deeplab-v3-in-torchvision/95808/2
+    """
+
+    def __init__(self, model: torch.nn.Module) -> None:
+        """
+        Init call.
+        """
+        super().__init__()
+        self.model = model
+
+    def forward(self, input_x: torch.Tensor) -> Any:
+        """
+        Wrap forward call.
+        """
+        data = self.model(input_x)
+
+        if isinstance(data, dict):
+            data_named_tuple = namedtuple("ModelEndpoints", sorted(data.keys()))  # type: ignore
+            data = data_named_tuple(**data)  # type: ignore
+
+        elif isinstance(data, list):
+            data = tuple(data)
+
+        return data
+
+
 def build():
     num_classes = 21
     return_layers = {"layer2": 'out_2', "layer3": 'out_3', "layer4": 'out_4'}
@@ -140,10 +170,16 @@ def build():
     # ASPP: 256, Feature 2: 512, Feature 3: 1024, Feature 4: 2048
     scene_classifier = SceneParserHead((256 + 512 + 1024 + 2048), 2)
     model = SceneParserModel(backbone=backbone, aspp=aspp, deeplab=deeplab_head, scene_classifier=scene_classifier)
-
     print(model)
     inp = torch.randn((1, 3, 640, 480))
     print(inp.shape)
+    # export graph
+    writer = SummaryWriter('logs')
+    model_wrapper = ModelWrapper(model)
+    writer.add_graph(model_wrapper, inp)
+    writer.close()
+
+    # test run
     model.eval()
     out = model(inp)
     print(out)
